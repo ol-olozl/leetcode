@@ -1,11 +1,14 @@
 import pandas as pd
 
 def department_highest_salary(employee: pd.DataFrame, department: pd.DataFrame) -> pd.DataFrame:
-    df = employee.merge(department, left_on="departmentId", right_on="id", suffixes=["_employee", "_department"])
-    max_salary = df.groupby("name_department")["salary"].max().reset_index()
-    top_earner = df.merge(max_salary, on=["name_department", "salary"])
-    return pd.DataFrame({
-        "Department": top_earner["name_department"],
-        "Employee": top_earner["name_employee"],
-        "Salary": top_earner["salary"]
-    })
+    """
+    goal: find employees who have the highest salary in each of the departments
+    steps:
+    1) merge Employee and Department tables on department id
+    2) find employees where their salary is same as department id's max salary
+    3) return the result  
+    """
+    df = employee.merge(department, how="left", left_on="departmentId", right_on="id")
+    df_max = df.loc[df.groupby("departmentId")["salary"].transform("max") == df["salary"]]
+    df_max.rename(columns={"name_y": "Department", "name_x":"Employee", "salary": "Salary"}, inplace=True)
+    return df_max[["Department", "Employee", "Salary"]]
